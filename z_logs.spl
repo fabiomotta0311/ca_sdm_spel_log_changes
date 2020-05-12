@@ -1,0 +1,56 @@
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	//	Autor	: Fabio Motta
+	//	Function: Registra logs quando campos são alterados
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	cr::z_logs(...){
+	
+	//Campos condicionalmente obrigatorio 
+	int debug_mode;
+	debug_mode = 1; //mude para 0 para cancelar o debug mode
+	
+	if (debug_mode == 1){
+		logf(SIGNIFICANT, "z_logs.spl -- Iniciando spel - TENANT_NAME");
+	}
+
+	//////////////////////////////////////////////////////////////////////
+	// PARA AMBIENTE MULTITENANCY
+	// Verifica se é um chamado da TENANT_NAME
+	//string ztenant;
+	//ztenant=format(tenant.name);
+	//if (ztenant != "TENANT_NAME") {
+    //    if (debug_mode == 1){
+	//       logf(SIGNIFICANT, "z_logs.spl -- Ticket Nao eh da TENANT_NAME. Saindo do SPEL...");
+	//    }
+	//    return;  // Se não for do TENANT_NAME não faz nada.
+	//}
+	
+	//////////////////////////////////////////////////////////////////////
+	//	Verifica valor antigo e valor novo de campos
+
+	 string str_string2;
+	 
+	 str_string2 = argv[2]; //Valor antigo
+	
+	//////////////////////////////////////////////////////////////////////
+	// Grava novos logs
+	
+	object group_leader_log;
+	object obj_log;
+	string str_rpid;	
+	
+	send_wait(0, top_object(), "get_co_group"); //Instancia group_leader
+	group_leader_log = msg[0];
+	
+	
+	send_wait(0, top_object(), "call_attr", "alg", "get_new_dob", NULL, NULL, group_leader_log);
+	
+	obj_log = msg[0];	//Instância objeto para gravação de nova linha
+	obj_log.call_req_id = persistent_id; //Persid do chamado
+	obj_log.type = "LOG";	//Tipo de log
+	obj_log.tenant = tenant;
+	obj_log.description = "Valor Antigo=" + str_string2 + " Valor Novo =" + string2 ;
+	
+	send_wait(0, group_leader_log, "checkin"); //Faz checkin de memória para banco de dados	
+
+}	
